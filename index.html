@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Assistant</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F0F4F8;color:#2E2E2E;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#1F3864,#1A5276);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr h1{color:#C9A84C;font-size:16px;font-weight:700;flex:1}
+.hdr p{color:rgba(255,255,255,.65);font-size:10px}
+.dot{width:10px;height:10px;border-radius:50%;background:#888;flex-shrink:0}
+.dot.on{background:#2ECC71}.dot.off{background:#C0392B}
+.clbl{font-size:10px;color:rgba(255,255,255,.65)}
+/* TABS - use buttons not divs for guaranteed clickability */
+.tabs{display:flex;background:#1F3864;flex-shrink:0}
+.tabs button{flex:1;padding:11px 4px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;font-family:inherit;font-weight:500}
+.tabs button.on{color:#C9A84C;border-bottom-color:#C9A84C;font-weight:700}
+/* PAGES */
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.on{display:flex}
+/* CHAT */
+.msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%}
+.msg.u{align-self:flex-end}.msg.a{align-self:flex-start}
+.bub{padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.5}
+.msg.u .bub{background:#1F3864;color:#fff;border-bottom-right-radius:3px}
+.msg.a .bub{background:#fff;border:1px solid #D9D9D9;border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.mt{font-size:9px;color:#aaa;margin-top:3px}.msg.u .mt{text-align:right}
+.typ{display:flex;gap:4px;padding:12px}
+.typ span{width:7px;height:7px;background:#1A5276;border-radius:50%;animation:bop 1s infinite}
+.typ span:nth-child(2){animation-delay:.2s}.typ span:nth-child(3){animation-delay:.4s}
+@keyframes bop{0%,60%,100%{transform:none}30%{transform:translateY(-5px)}}
+/* ENTRY CARD */
+.ecard{background:#FFF9E6;border:1.5px solid #C9A84C;border-radius:12px;padding:12px;margin-top:8px}
+.ecard h4{color:#1F3864;font-size:11px;font-weight:700;margin-bottom:8px}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.ei label{font-size:9px;color:#888;text-transform:uppercase;display:block}
+.ei b{font-size:12px;color:#1F3864;font-weight:700}
+.ea{display:flex;gap:6px}
+.ea button{flex:1;border:none;padding:9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer}
+.yes{background:#1E7E34;color:#fff}.loc{background:#1F3864;color:#C9A84C}.no{background:#C0392B;color:#fff;flex:0!important;padding:9px 12px!important}
+.sst{margin-top:6px;font-size:11px;text-align:center;font-weight:600;padding:6px;border-radius:6px;display:none}
+.sst.ok{background:#E9F7EF;color:#1E7E34}.sst.er{background:#FDEDEC;color:#C0392B}.sst.ld{background:#FFF9E6;color:#E67E22}
+/* INPUT */
+.ibar{background:#fff;border-top:1px solid #D9D9D9;padding:10px 12px;flex-shrink:0}
+.qarow{display:flex;gap:5px;overflow-x:auto;margin-bottom:8px;padding-bottom:2px}
+.qarow::-webkit-scrollbar{display:none}
+.qa{background:#FFF9E6;border:1px solid #C9A84C;border-radius:14px;padding:5px 10px;font-size:11px;color:#1F3864;cursor:pointer;white-space:nowrap;font-weight:500;flex-shrink:0}
+.irow{display:flex;gap:8px;align-items:flex-end}
+.icam{background:#1A5276;color:#fff;border:none;border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+textarea{flex:1;border:2px solid #D9D9D9;border-radius:10px;padding:9px 11px;font-size:13px;resize:none;min-height:40px;max-height:100px;font-family:inherit;outline:none}
+textarea:focus{border-color:#1A5276}
+.isnd{background:#1F3864;color:#fff;border:none;width:40px;height:40px;border-radius:10px;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.imgpv{max-width:100%;max-height:70px;border-radius:8px;margin-bottom:6px;display:none}
+#imgIn{display:none}
+/* QUICK ADD */
+.qscroll{flex:1;overflow-y:auto;padding:14px}
+.fl{font-size:11px;font-weight:700;color:#1F3864;display:block;margin-bottom:4px;margin-top:10px}
+input[type=text],input[type=number],input[type=date],input[type=password],select{width:100%;border:2px solid #D9D9D9;border-radius:8px;padding:9px 10px;font-size:13px;outline:none;font-family:inherit;background:#fff}
+input:focus,select:focus{border-color:#1A5276}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bigsub{width:100%;background:#1F3864;color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px}
+.qres{margin-top:8px;padding:9px;border-radius:8px;font-size:12px;font-weight:600;display:none;text-align:center}
+.qres.ok{background:#E9F7EF;color:#1E7E34}.qres.er{background:#FDEDEC;color:#C0392B}.qres.ld{background:#FFF9E6;color:#E67E22}
+.trow{display:flex;gap:6px;margin-top:10px}
+.tbtn{flex:1;padding:9px;border:2px solid #D9D9D9;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#1F3864}
+.tbtn.on{border-color:#1A5276;background:#D6E4F0;color:#1A5276}
+/* LOG */
+.lhdr{background:#1F3864;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.lhdr span{color:rgba(255,255,255,.8);font-size:11px}
+.expbtn{background:#C9A84C;color:#1F3864;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer}
+.lscroll{flex:1;overflow-y:auto;padding:10px}
+.li{background:#fff;border-radius:10px;padding:10px;margin-bottom:7px;border-left:4px solid #1A5276;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.liamt{font-size:14px;font-weight:700;color:#1E7E34;float:right}
+.lidesc{font-size:12px;font-weight:600;color:#1F3864}
+.licat{font-size:10px;background:#FFF9E6;color:#1F3864;padding:2px 7px;border-radius:10px;display:inline-block;margin:2px 0}
+.limeta{font-size:10px;color:#999}
+.lisync{font-size:9px;color:#1E7E34;font-weight:600}
+.lipend{font-size:9px;color:#E67E22;font-weight:600}
+.empty{text-align:center;padding:40px;color:#ccc;font-size:13px}
+/* SETUP - always scrollable */
+.sscroll{flex:1;overflow-y:auto;padding:14px}
+.sc{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;border-left:4px solid #C9A84C;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.sc h3{color:#1F3864;font-size:13px;margin-bottom:7px;font-weight:700}
+.sc p{font-size:12px;color:#444;line-height:1.6}
+.sc code{background:#f0f0f0;padding:2px 6px;border-radius:4px;font-size:11px;font-family:monospace;word-break:break-all}
+.sbtn2{width:100%;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px}
+.tres{margin-top:8px;padding:8px;border-radius:8px;font-size:12px;font-weight:600;display:none;word-break:break-all}
+.tres.ok{background:#E9F7EF;color:#1E7E34}.tres.er{background:#FDEDEC;color:#C0392B}
+.tablist{background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:10px;margin-top:8px;font-size:11px;line-height:1.8;display:none}
+.apisaved{background:#E9F7EF;color:#1E7E34;padding:7px;border-radius:7px;font-size:11px;font-weight:600;margin-top:6px;display:none;text-align:center}
+/* TOAST */
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1F3864;color:#fff;padding:8px 18px;border-radius:18px;font-size:12px;z-index:9999;display:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div style="flex:1">
+    <h1>💰 Finance Assistant</h1>
+    <p>Reads receipts · Writes to Google Sheet</p>
+  </div>
+  <div class="dot" id="dot"></div>
+  <span class="clbl" id="clbl">—</span>
+</div>
+
+<div class="tabs">
+  <button id="tab-chat"  onclick="show('chat')"  class="on">💬 Chat</button>
+  <button id="tab-quick" onclick="show('quick')">⚡ Add</button>
+  <button id="tab-log"   onclick="show('log')">📋 Log</button>
+  <button id="tab-setup" onclick="show('setup')">⚙️ Connect</button>
+</div>
+
+<!-- ═══ CHAT ═══ -->
+<div class="page on" id="page-chat">
+  <div class="msgs" id="msgs">
+    <div class="msg a">
+      <div class="bub"><strong>مرحباً Omar 👋</strong><br><br>
+      I'm your Financial Controller — I know your sheet's structure and I'll reshape it as needed, not just dump rows into it.<br><br>
+      🏷️ <strong>"Rent from Maadi flat, 18k EGP"</strong> → I'll rename Income!B9 to match and log it<br>
+      📚 <strong>Paste historical data</strong> → I batch-import with correct dates &amp; categories<br>
+      🧮 <strong>"The SUM on D20 is wrong"</strong> → I fix the formula<br>
+      🔀 <strong>"Row 47 should be Groceries not Food"</strong> → I reclassify<br>
+      📸 <strong>Receipt photo</strong> → extract, categorize, log<br>
+      💱 <strong>"USD is 51.5 now"</strong> → update FX everywhere<br><br>
+      <em>⚙️ First time? Connect tab → paste API key + sheet URL + the Apps Script code block. Then I'll load your sheet brain automatically.</em>
+      </div>
+      <div class="mt">Now</div>
+    </div>
+  </div>
+  <div class="ibar">
+    <div class="qarow">
+      <div class="qa" onclick="qp('Paid ')">➕ Expense</div>
+      <div class="qa" onclick="qp('Analyze this receipt')">📸 Receipt</div>
+      <div class="qa" onclick="qp('Rent from ')">🏠 Rent income</div>
+      <div class="qa" onclick="qp('My salary is ')">💰 Salary</div>
+      <div class="qa" onclick="qp('Historical import — here are past transactions:\n')">📚 Historical</div>
+      <div class="qa" onclick="qp('show my spending summary')">📊 Summary</div>
+      <div class="qa" onclick="qp('USD rate is now ')">💱 FX</div>
+      <div class="qa" onclick="qp('Rename Income cell ')">🏷️ Rename</div>
+    </div>
+    <img id="imgpv" class="imgpv">
+    <input type="file" id="imgIn" accept="image/*" onchange="handleImg(this)">
+    <div class="irow">
+      <button class="icam" onclick="document.getElementById('imgIn').click()">📷</button>
+      <textarea id="cin" placeholder='e.g. "Paid 450 EGP at Spinneys for groceries"' rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <button class="isnd" onclick="send()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ QUICK ADD ═══ -->
+<div class="page" id="page-quick">
+  <div class="qscroll">
+    <div style="background:#1F3864;color:#C9A84C;padding:10px;border-radius:10px;font-size:11px;font-weight:700">⚡ Quick entry — writes directly to Google Sheet with confirmation</div>
+    <div style="margin-top:10px;font-size:11px;font-weight:700;color:#1F3864">Which tab?</div>
+    <div class="trow">
+      <button class="tbtn on" id="tb-tr" onclick="setTgt('transaction')">📋 Transactions</button>
+      <button class="tbtn" id="tb-da" onclick="setTgt('daily')">🛒 Daily</button>
+      <button class="tbtn" id="tb-bk" onclick="setTgt('bulk')">📦 Bulk</button>
+    </div>
+    <label class="fl">📝 Description</label>
+    <input type="text" id="qdesc" placeholder="e.g. Carrefour groceries">
+    <div class="g2" style="margin-top:10px">
+      <div><label class="fl">💰 Amount</label><input type="number" id="qamt" placeholder="0" step="0.01"></div>
+      <div><label class="fl">💱 Currency</label>
+        <select id="qccy"><option value="EGP">🇪🇬 EGP</option><option value="USD">🇺🇸 USD</option><option value="EUR">🇪🇺 EUR</option><option value="GBP">🇬🇧 GBP</option></select>
+      </div>
+    </div>
+    <label class="fl">🗂️ Category</label>
+    <select id="qcat">
+      <option>🍽️ Food & Dining</option><option>🛒 Groceries</option><option>☕ Café / Coffee</option>
+      <option>🚗 Transport / Fuel</option><option>💊 Health & Pharmacy</option><option>👕 Clothing</option>
+      <option>🎭 Entertainment</option><option>🏠 Home Supplies</option><option>🚗 Car Maintenance</option>
+      <option>🏫 School Fees</option><option>🕌 Zakah / Charity</option><option>🏢 Real Estate Maint.</option>
+      <option>💪 Sporting Club</option><option>🏦 Fixed Instalment</option><option>👨‍👩‍👧 Household Fee</option>
+      <option>✈️ Travel</option><option>📦 Bulk Purchase</option><option>💻 Subscriptions</option><option>💰 Other</option>
+    </select>
+    <div class="g2">
+      <div><label class="fl">📅 Date</label><input type="date" id="qdate"></div>
+      <div><label class="fl">💳 Payment</label>
+        <select id="qpay"><option>Cash</option><option>Debit Card</option><option>Credit Card</option><option>Bank Transfer</option><option>Instapay</option><option>Vodafone Cash</option></select>
+      </div>
+    </div>
+    <label class="fl">📝 Notes</label>
+    <input type="text" id="qnotes" placeholder="Optional...">
+    <button class="bigsub" id="qsub" onclick="submitQ()">✅ Add to Google Sheet</button>
+    <div class="qres" id="qres"></div>
+  </div>
+</div>
+
+<!-- ═══ LOG ═══ -->
+<div class="page" id="page-log" style="flex-direction:column">
+  <div class="lhdr">
+    <span id="lcnt">0 entries</span>
+    <button class="expbtn" onclick="exportCSV()">📥 Export CSV</button>
+  </div>
+  <div class="lscroll" id="litems"><div class="empty">📋<br>No entries yet</div></div>
+</div>
+
+<!-- ═══ SETUP ═══ -->
+<div class="page" id="page-setup" style="flex-direction:column">
+  <div class="sscroll">
+
+    <div class="sc" style="border-left-color:#C0392B">
+      <h3>🔑 Step 1 — Anthropic API Key</h3>
+      <p>Get from <strong>console.anthropic.com</strong> → API Keys → Create Key</p>
+      <input type="password" id="apiKey" placeholder="sk-ant-api03-...">
+      <button class="sbtn2" onclick="saveApi()" style="background:#1E7E34;color:#fff">💾 Save API Key</button>
+      <div class="apisaved" id="apiOk">✅ API Key saved and ready</div>
+      <p style="margin-top:6px;font-size:10px;color:#999">🔒 Stored only in your browser — never shared</p>
+    </div>
+
+    <div class="sc">
+      <h3>🔗 Step 2 — Google Sheet URL</h3>
+      <p>Paste your Apps Script <code>/exec</code> URL:</p>
+      <input type="text" id="surl" placeholder="https://script.google.com/macros/s/.../exec">
+      <button class="sbtn2" onclick="testConn()" style="background:#1A5276;color:#fff">🔌 Test Connection</button>
+      <div class="tres" id="tres"></div>
+      <div class="tablist" id="tablist"></div>
+      <button class="sbtn2" onclick="saveUrl()" style="background:#C9A84C;color:#1F3864">💾 Save & Connect</button>
+    </div>
+
+    <div class="sc" style="border-left-color:#1A5276">
+      <h3>💱 Step 3 — Live FX in Google Sheets</h3>
+      <p>In your <strong>💱 FX Rates</strong> tab replace column B:<br><br>
+      <code>B4 =GOOGLEFINANCE("CURRENCY:USDEGP")</code><br>
+      <code>B5 =GOOGLEFINANCE("CURRENCY:EUREGP")</code><br>
+      <code>B6 =GOOGLEFINANCE("CURRENCY:GBPEGP")</code></p>
+    </div>
+
+    <div class="sc" style="border-left-color:#1E7E34">
+      <h3>🧠 Step 3 — Sheet Brain (CRITICAL for smart mode)</h3>
+      <p id="ctxStatus" style="font-size:11px;margin-bottom:6px">Not loaded yet. Connect above first.</p>
+      <button class="sbtn2" onclick="loadContext()" style="background:#1E7E34;color:#fff">🔄 Refresh sheet brain</button>
+      <p style="margin-top:8px;font-size:11px">This pulls every tab name, headers, and label cells (like <code>Income!B9</code>) into the AI's context so it can rename, reclassify, and fix formulas — not just append rows.</p>
+    </div>
+
+    <div class="sc" style="border-left-color:#C0392B">
+      <h3>⚙️ Step 4 — Update your Apps Script (required)</h3>
+      <p>For the smart features (rename cells, update formulas, bulk historical import, read structure) your Apps Script needs these handlers. Open your Apps Script project, paste this at the bottom of <code>Code.gs</code>, then redeploy:</p>
+      <button class="sbtn2" onclick="copyGS()" style="background:#1F3864;color:#C9A84C">📋 Copy Apps Script code</button>
+      <pre id="gscode" style="background:#1a1a1a;color:#c9a84c;padding:10px;border-radius:8px;font-size:10px;font-family:monospace;max-height:220px;overflow:auto;margin-top:8px;white-space:pre-wrap;line-height:1.4">// ===== SMART MODE HANDLERS — append to your existing doGet(e) router =====
+// In your existing doGet(e), add these cases to the switch on action:
+//
+//   case 'getContext':   return json(getContext_());
+//   case 'updateCell':   return json(updateCell_(p.tab, p.cell, p.value));
+//   case 'renameLabel':  return json(updateCell_(p.tab, p.cell, p.newLabel));
+//   case 'updateFormula':return json(updateFormula_(p.tab, p.cell, p.formula));
+//   case 'batchAdd':     return json(batchAdd_(p.tab, JSON.parse(p.entries||'[]')));
+//   case 'reclassify':   return json(reclassify_(p.tab, Number(p.row), p.newCategory, p.reason));
+
+function getContext_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tabs = ss.getSheets().map(function(sh){
+    var name = sh.getName();
+    var lastRow = sh.getLastRow(), lastCol = sh.getLastColumn();
+    var headers = lastRow>0 && lastCol>0 ? sh.getRange(1,1,1,lastCol).getDisplayValues()[0] : [];
+    // Grab labels in columns A and B for rows 1..40 so the AI sees row labels like "Rental Income — Property 3"
+    var labels = [];
+    var maxR = Math.min(lastRow, 40);
+    if (maxR>0 && lastCol>=1) {
+      var vals = sh.getRange(1,1,maxR,Math.min(2,lastCol)).getDisplayValues();
+      for (var i=0;i<vals.length;i++) {
+        for (var j=0;j<vals[i].length;j++) {
+          var v = vals[i][j];
+          if (v && isNaN(Number(String(v).replace(/[, ]/g,'')))) {
+            labels.push({cell: String.fromCharCode(65+j)+(i+1), value: v});
+          }
+        }
+      }
+    }
+    return {name:name, lastRow:lastRow, lastCol:lastCol, headers:headers, labels:labels};
+  });
+  var labelCount = tabs.reduce(function(a,t){return a+t.labels.length;},0);
+  return {ok:true, context:{sheet:ss.getName(), tabs:tabs, labelCount:labelCount}};
+}
+
+function updateCell_(tab, cell, value) {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(tab);
+  if (!sh) return {ok:false, error:'No tab '+tab};
+  sh.getRange(cell).setValue(value);
+  return {ok:true, tab:tab, cell:cell, value:value};
+}
+
+function updateFormula_(tab, cell, formula) {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(tab);
+  if (!sh) return {ok:false, error:'No tab '+tab};
+  if (formula.charAt(0) !== '=') formula = '=' + formula;
+  sh.getRange(cell).setFormula(formula);
+  return {ok:true, tab:tab, cell:cell, formula:formula};
+}
+
+function batchAdd_(tab, entries) {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(tab);
+  if (!sh) return {ok:false, error:'No tab '+tab};
+  if (!entries || !entries.length) return {ok:false, error:'No entries'};
+  var startRow = sh.getLastRow() + 1;
+  var rows = entries.map(function(e){
+    return [e.date||'', e.description||'', e.category||'', e.currency||'EGP',
+            Number(e.amount)||0, Number(e.egp_amount)||0, e.payment_method||'', e.notes||''];
+  });
+  sh.getRange(startRow, 1, rows.length, rows[0].length).setValues(rows);
+  return {ok:true, tab:tab, added:rows.length, startRow:startRow};
+}
+
+function reclassify_(tab, row, newCategory, reason) {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(tab);
+  if (!sh) return {ok:false, error:'No tab '+tab};
+  // Assumes category is in column C — adjust if your layout differs.
+  sh.getRange(row, 3).setValue(newCategory);
+  if (reason) {
+    var noteCol = Math.max(sh.getLastColumn(), 8);
+    sh.getRange(row, noteCol).setNote('Reclassified: '+reason);
+  }
+  return {ok:true, tab:tab, row:row, newCategory:newCategory};
+}
+
+function json(o) {
+  return ContentService.createTextOutput(JSON.stringify(o))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+      <p style="margin-top:8px;font-size:10px;color:#888">⚠️ After pasting, you MUST redeploy (Deploy → Manage deployments → pencil → New version → Deploy). Then tap "Refresh sheet brain" above.</p>
+    </div>
+
+    <div class="sc" style="border-left-color:#1A5276">
+      <h3>📥 Download App</h3>
+      <p>Save latest version to your device</p>
+      <button class="sbtn2" onclick="dlApp()" style="background:#1A5276;color:#fff">📥 Download index.html</button>
+    </div>
+
+    <div class="sc">
+      <h3>✅ Connection Status</h3>
+      <p id="stxt">Enter your API key and Sheet URL above to get started.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────
+var LOG      = JSON.parse(localStorage.getItem('fl') || '[]');
+var FX       = {EGP:1, USD:50, EUR:54, GBP:64};
+var img64    = null, imgMime = null, HIST = [], TGT = 'transaction';
+var SURL     = localStorage.getItem('su') || '';
+var AKEY     = localStorage.getItem('ak') || '';
+var SCTX     = JSON.parse(localStorage.getItem('sctx') || 'null'); // live sheet structure snapshot
+
+// Init
+document.getElementById('qdate').value = new Date().toISOString().split('T')[0];
+if (SURL) { document.getElementById('surl').value = SURL; pingSheet(); }
+if (AKEY) { document.getElementById('apiKey').value = AKEY; document.getElementById('apiOk').style.display = 'block'; }
+
+// ── Navigation ─────────────────────────────────────────────────────────
+function show(p) {
+  ['chat','quick','log','setup'].forEach(function(n) {
+    document.getElementById('page-'+n).style.display = 'none';
+    document.getElementById('tab-'+n).classList.remove('on');
+  });
+  document.getElementById('page-'+p).style.display = 'flex';
+  document.getElementById('tab-'+p).classList.add('on');
+  if (p === 'log') renderLog();
+}
+
+// ── Sheet API ──────────────────────────────────────────────────────────
+async function callSheet(params) {
+  if (!SURL) return {ok:false, error:'No sheet URL'};
+  var qs = Object.keys(params).map(function(k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(typeof params[k]==='object' ? JSON.stringify(params[k]) : params[k]);
+  }).join('&');
+  var r = await fetch(SURL + '?' + qs);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// ── Connection ─────────────────────────────────────────────────────────
+async function pingSheet() {
+  if (!SURL) return;
+  setDot('?');
+  try {
+    var d = await callSheet({action:'ping'});
+    if (d.ok) {
+      setDot(true);
+      document.getElementById('stxt').textContent = '✅ Connected to: ' + (d.sheet||'your sheet') + (AKEY ? ' | API key set ✅' : ' | ⚠️ Add API key');
+      loadContext(); // pull live structure so the AI knows what the sheet looks like
+    } else { setDot(false); }
+  } catch(e) { setDot(false); }
+}
+
+async function loadContext() {
+  if (!SURL) return;
+  try {
+    var d = await callSheet({action:'getContext'});
+    if (d && d.ok) {
+      SCTX = d.context || d;
+      localStorage.setItem('sctx', JSON.stringify(SCTX));
+      var el = document.getElementById('ctxStatus');
+      if (el) el.textContent = '🧠 Sheet brain loaded — '+(SCTX.tabs?SCTX.tabs.length:0)+' tabs, '+(SCTX.labelCount||0)+' labeled cells';
+      toast('🧠 Sheet structure loaded');
+    } else {
+      var el2 = document.getElementById('ctxStatus');
+      if (el2) el2.textContent = '⚠️ Apps Script does not yet support getContext — paste the updated code below.';
+    }
+  } catch(e) {
+    var el3 = document.getElementById('ctxStatus');
+    if (el3) el3.textContent = '⚠️ Could not load sheet structure: '+e.message;
+  }
+}
+
+function setDot(s) {
+  var d=document.getElementById('dot'), l=document.getElementById('clbl');
+  if (s===true)       { d.className='dot on';  l.textContent='Connected ✅'; }
+  else if (s===false) { d.className='dot off'; l.textContent='Not connected'; }
+  else                { d.className='dot';     l.textContent='Checking...'; }
+}
+
+async function testConn() {
+  var url = document.getElementById('surl').value.trim();
+  if (!url) { toast('Enter URL first'); return; }
+  var btn = document.querySelector('#tres').previousElementSibling;
+  btn.textContent = '⏳ Testing...';
+  var box = document.getElementById('tres');
+  var tbl = document.getElementById('tablist');
+  try {
+    var r = await fetch(url + '?action=ping');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var d = await r.json();
+    box.style.display = 'block';
+    if (d.ok) {
+      box.className = 'tres ok';
+      box.textContent = '✅ Connected! Sheet: ' + (d.sheet||'OK');
+      if (d.tabs && d.tabs.length) {
+        tbl.style.display = 'block';
+        tbl.innerHTML = '<strong>Your tabs:</strong><br>' + d.tabs.join('<br>');
+      }
+    } else {
+      box.className = 'tres er';
+      box.textContent = '❌ ' + (d.error||'Error');
+    }
+  } catch(e) {
+    box.style.display = 'block';
+    box.className = 'tres er';
+    box.textContent = '❌ Cannot reach URL. Set access to "Anyone" when deploying.';
+  }
+  btn.textContent = '🔌 Test Connection';
+}
+
+function saveApi() {
+  var k = document.getElementById('apiKey').value.trim();
+  if (!k || !k.startsWith('sk-')) { toast('⚠️ Key must start with sk-'); return; }
+  AKEY = k; localStorage.setItem('ak', k);
+  document.getElementById('apiOk').style.display = 'block';
+  toast('✅ API Key saved');
+  pingSheet();
+}
+
+function saveUrl() {
+  var url = document.getElementById('surl').value.trim();
+  if (!url) { toast('Enter URL first'); return; }
+  SURL = url; localStorage.setItem('su', url);
+  pingSheet(); toast('✅ Sheet URL saved'); show('chat');
+}
+
+// ── Image ──────────────────────────────────────────────────────────────
+function handleImg(inp) {
+  var f = inp.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(e) {
+    var src = e.target.result;
+    img64 = src.split(',')[1]; imgMime = src.split(';')[0].split(':')[1];
+    var p = document.getElementById('imgpv'); p.src=src; p.style.display='block';
+    toast('📷 Ready — tap ➤');
+  };
+  rd.readAsDataURL(f);
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────
+function qp(t) { document.getElementById('cin').value = t; document.getElementById('cin').focus(); }
+
+function addMsg(role, html) {
+  var c=document.getElementById('msgs'), d=document.createElement('div');
+  d.className = 'msg ' + role;
+  var t = new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+  d.innerHTML = '<div class="bub">'+html+'</div><div class="mt">'+t+'</div>';
+  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+}
+function showTyp() {
+  var c=document.getElementById('msgs'), d=document.createElement('div');
+  d.id='typ'; d.className='msg a';
+  d.innerHTML='<div class="bub"><div class="typ"><span></span><span></span><span></span></div></div>';
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+function hideTyp() { var t=document.getElementById('typ'); if(t) t.remove(); }
+function esc(t) { return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+async function send() {
+  var inp=document.getElementById('cin'), text=inp.value.trim();
+  if (!text && !img64) return;
+  if (!AKEY) { addMsg('a','⚠️ No API key. Tap <strong>⚙️ Connect</strong> tab and add your key.'); return; }
+
+  addMsg('u', esc(text || '📷 Analyze this receipt'));
+  inp.value=''; inp.style.height='auto';
+
+  var content = [];
+  if (img64) {
+    content.push({type:'image', source:{type:'base64', media_type:imgMime, data:img64}});
+    document.getElementById('imgpv').style.display='none';
+    img64=null; imgMime=null;
+  }
+  content.push({type:'text', text: text||'Extract all expense data from this image'});
+  HIST.push({role:'user', content:content});
+  showTyp();
+
+  var ctxBlock = SCTX ? ('\n\n=== LIVE SHEET STRUCTURE (read from the actual file right now) ===\n'+JSON.stringify(SCTX,null,2)+'\n=== END STRUCTURE ===\n') : '\n\n(Sheet structure not loaded yet — ask the user to reconnect on the ⚙️ tab if you need it.)\n';
+
+  var sys =
+    'You are Omar\'s personal Financial Controller — not a data-entry clerk. You OWN his Google Sheet the way its creator would. You think like an accountant: before acting you consider where a number belongs, whether the label still fits, whether the formulas will still add up, and whether reclassifying an older entry would give a cleaner picture. If something in the sheet is wrong, stale, or mislabeled, you PROPOSE a fix and emit the action to fix it.\n\n'+
+    'CONTEXT — Omar is an Egyptian professional tracking finances in EGP/USD/EUR/GBP. Recurring items include: Porsche trip ticket ~40,000 EGP quarterly, school fees in EUR annually, compound maintenance monthly, wife household fee monthly, car maintenance quarterly, sporting club annually, loan instalments monthly. He also has rental income across multiple properties and may add/remove properties over time.\n\n'+
+    'FX rates (EGP per 1 unit): USD='+FX.USD+', EUR='+FX.EUR+', GBP='+FX.GBP+'. Update these if he gives new rates.\n\n'+
+    'Expense categories: Food & Dining, Groceries, Cafe/Coffee, Transport/Fuel, Health & Pharmacy, Clothing, Entertainment, Home Supplies, Car Maintenance, School Fees, Zakah/Charity, Real Estate Maint., Sporting Club, Fixed Instalment, Household Fee, Travel, Bulk Purchase, Subscriptions, Other. If none fit well, say so and suggest a new one.\n'+
+    ctxBlock+'\n'+
+    '=== HOW YOU ACT ===\n'+
+    '1. READ THE STRUCTURE ABOVE before every response. It lists every tab, its headers, and the label cells (e.g. Income!B9 = "Rental Income — Property 3"). Treat those labels as EDITABLE — they are placeholders that should match reality.\n'+
+    '2. When Omar mentions a named income/expense that maps to an existing placeholder row (e.g. he says "rent from the Maadi flat" and Income!B9 is a generic "Rental Income — Property 3"), RENAME that cell to his wording in the same action batch as recording the amount. Do not create a duplicate row.\n'+
+    '3. If a fixed-income or fixed-expense cell is empty/zero and he gives you a real figure, WRITE directly into that cell with updateCell instead of appending a new row.\n'+
+    '4. If a formula looks broken or a SUM range no longer covers all rows after you add something, emit updateFormula to fix it. State briefly what you fixed.\n'+
+    '5. For historical dumps (many past transactions at once) use ONE batchAdd action with an "entries" array — do not spam dozens of single entries.\n'+
+    '6. Reclassify freely: if an older entry was miscategorized, propose a reclassify action.\n'+
+    '7. Pick the right tab yourself based on the structure: small daily purchases → Daily tab, large/planned → Bulk tab, regular expenses → Transactions, incoming money → Income. Never guess tab names — use the exact names from the structure block.\n'+
+    '8. Be decisive. Don\'t ask "which tab?" — choose, then briefly say why.\n\n'+
+    '=== OUTPUT FORMAT ===\n'+
+    'Write a short human confirmation (what you\'re doing and why, 1–3 sentences) THEN emit one or more action blocks. You may emit multiple blocks in a single response — they will all be confirmed together. Every action MUST be wrapped in <ENTRY>...</ENTRY>.\n\n'+
+    'Available actions:\n'+
+    '• <ENTRY>{"action":"addTransaction","tab":"<exact tab name>","date":"YYYY-MM-DD","description":"...","category":"...","currency":"EGP","amount":0,"egp_amount":0,"payment_method":"Cash","notes":"..."}</ENTRY>\n'+
+    '• <ENTRY>{"action":"addDaily", ...same fields...}</ENTRY>\n'+
+    '• <ENTRY>{"action":"addBulk", ...same fields...}</ENTRY>\n'+
+    '• <ENTRY>{"action":"addIncome","tab":"Income","date":"YYYY-MM-DD","source":"...","amount":0,"currency":"EGP","egp_amount":0,"notes":"..."}</ENTRY>\n'+
+    '• <ENTRY>{"action":"addFixedIncome","source":"...","monthly_amount":0,"annual_amount":0,"currency":"EGP","notes":"..."}</ENTRY>\n'+
+    '• <ENTRY>{"action":"updateCell","tab":"Income","cell":"B9","value":"Rental Income — Maadi Flat"}</ENTRY>  ← renames/overwrites any cell\n'+
+    '• <ENTRY>{"action":"renameLabel","tab":"Income","cell":"B9","newLabel":"Rental Income — Maadi Flat"}</ENTRY>  ← semantic alias for updateCell on label cells\n'+
+    '• <ENTRY>{"action":"updateFormula","tab":"Income","cell":"D20","formula":"=SUM(D4:D19)"}</ENTRY>\n'+
+    '• <ENTRY>{"action":"batchAdd","tab":"Transactions","entries":[{"date":"2024-01-05","description":"...","category":"...","currency":"EGP","amount":0,"egp_amount":0,"payment_method":"Cash","notes":""}, ...]}</ENTRY>\n'+
+    '• <ENTRY>{"action":"reclassify","tab":"Transactions","row":47,"newCategory":"Groceries","reason":"..."}</ENTRY>\n'+
+    '• <ENTRY>{"action":"updateFX","currency":"USD","rate":51.5}</ENTRY>\n\n'+
+    'Always compute egp_amount = amount × FX rate. Always use YYYY-MM-DD. Use the EXACT tab names from the structure block. Respond in the same language as the user (English or Arabic). Be concise, confident, and act like you built the sheet yourself.';
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': AKEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens:8000, system:sys, messages:HIST})
+    });
+    var data = await resp.json();
+    hideTyp();
+
+    if (data.error) {
+      var msg = data.error.message || 'Unknown error';
+      if (msg.toLowerCase().indexOf('auth') !== -1 || msg.toLowerCase().indexOf('key') !== -1) {
+        addMsg('a','⚠️ Invalid API key. Go to <strong>⚙️ Connect</strong> and check your key.');
+      } else {
+        addMsg('a','⚠️ API error: '+esc(msg));
+      }
+      HIST.pop(); return;
+    }
+
+    var aiText = data.content.map(function(b){return b.text||'';}).join('');
+    HIST.push({role:'assistant', content:aiText});
+    var re = /<ENTRY>([\s\S]*?)<\/ENTRY>/g, m, entries = [];
+    while ((m = re.exec(aiText)) !== null) {
+      try { entries.push(JSON.parse(m[1].trim())); } catch(e){ console.warn('parse fail',e,m[1]); }
+    }
+    var dp = aiText.replace(/<ENTRY>[\s\S]*?<\/ENTRY>/g,'').trim();
+    if (dp) addMsg('a', esc(dp));
+    entries.forEach(function(ent){ showCard(ent); });
+
+  } catch(e) {
+    hideTyp();
+    addMsg('a','⚠️ Network error: '+esc(e.message));
+    HIST.pop();
+  }
+}
+
+// ── Entry Card ─────────────────────────────────────────────────────────
+function showCard(e) {
+  var c=document.getElementById('msgs'), d=document.createElement('div');
+  d.className='msg a';
+  var body = '';
+  var act = e.action || 'addTransaction';
+
+  if (act === 'updateCell' || act === 'renameLabel') {
+    body =
+      '<h4>✏️ '+(act==='renameLabel'?'Rename label':'Update cell')+'</h4>'+
+      '<div class="eg">'+
+      '<div class="ei"><label>Tab</label><b>'+(e.tab||'—')+'</b></div>'+
+      '<div class="ei"><label>Cell</label><b>'+(e.cell||'—')+'</b></div>'+
+      '<div class="ei" style="grid-column:span 2"><label>New value</label><b>'+esc(e.value||e.newLabel||'—')+'</b></div>'+
+      '</div>';
+  } else if (act === 'updateFormula') {
+    body =
+      '<h4>🧮 Update formula</h4>'+
+      '<div class="eg">'+
+      '<div class="ei"><label>Tab</label><b>'+(e.tab||'—')+'</b></div>'+
+      '<div class="ei"><label>Cell</label><b>'+(e.cell||'—')+'</b></div>'+
+      '<div class="ei" style="grid-column:span 2"><label>Formula</label><b style="font-family:monospace;font-size:11px">'+esc(e.formula||'—')+'</b></div>'+
+      '</div>';
+  } else if (act === 'batchAdd') {
+    var n = (e.entries||[]).length;
+    var preview = (e.entries||[]).slice(0,3).map(function(x){ return '• '+(x.date||'')+' '+(x.description||'')+' — '+(x.amount||0)+' '+(x.currency||'EGP'); }).join('<br>');
+    body =
+      '<h4>📚 Bulk historical import ('+n+' entries)</h4>'+
+      '<div class="eg"><div class="ei" style="grid-column:span 2"><label>Target tab</label><b>'+(e.tab||'Transactions')+'</b></div></div>'+
+      '<div style="font-size:11px;color:#444;line-height:1.5">'+preview+(n>3?'<br>…and '+(n-3)+' more':'')+'</div>';
+  } else if (act === 'reclassify') {
+    body =
+      '<h4>🔀 Reclassify row</h4>'+
+      '<div class="eg">'+
+      '<div class="ei"><label>Tab</label><b>'+(e.tab||'—')+'</b></div>'+
+      '<div class="ei"><label>Row</label><b>'+(e.row||'—')+'</b></div>'+
+      '<div class="ei" style="grid-column:span 2"><label>New category</label><b>'+(e.newCategory||'—')+'</b></div>'+
+      (e.reason?'<div class="ei" style="grid-column:span 2"><label>Reason</label><b style="font-weight:400;font-size:11px">'+esc(e.reason)+'</b></div>':'')+
+      '</div>';
+  } else if (act === 'updateFX') {
+    body =
+      '<h4>💱 Update FX rate</h4>'+
+      '<div class="eg">'+
+      '<div class="ei"><label>Currency</label><b>'+(e.currency||'—')+'</b></div>'+
+      '<div class="ei"><label>New rate (EGP)</label><b>'+(e.rate||'—')+'</b></div>'+
+      '</div>';
+  } else if (act === 'addFixedIncome') {
+    body =
+      '<h4>💰 Fixed income</h4>'+
+      '<div class="eg">'+
+      '<div class="ei" style="grid-column:span 2"><label>Source</label><b>'+(e.source||e.description||'—')+'</b></div>'+
+      '<div class="ei"><label>Monthly</label><b>'+(e.monthly_amount||0)+' '+(e.currency||'EGP')+'</b></div>'+
+      '<div class="ei"><label>Annual</label><b>'+(e.annual_amount||((e.monthly_amount||0)*12))+' '+(e.currency||'EGP')+'</b></div>'+
+      '</div>';
+  } else if (act === 'addIncome') {
+    body =
+      '<h4>💵 One-off income</h4>'+
+      '<div class="eg">'+
+      '<div class="ei"><label>Date</label><b>'+(e.date||'Today')+'</b></div>'+
+      '<div class="ei"><label>Amount</label><b>'+(e.amount||0)+' '+(e.currency||'EGP')+'</b></div>'+
+      '<div class="ei" style="grid-column:span 2"><label>Source</label><b>'+(e.source||e.description||'—')+'</b></div>'+
+      '</div>';
+  } else {
+    // addTransaction / addDaily / addBulk
+    var extra = (e.currency && e.currency!=='EGP') ? ' ≈ '+(e.egp_amount||0).toLocaleString()+' EGP' : '';
+    body =
+      '<h4>📋 '+({addDaily:'Daily purchase',addBulk:'Bulk purchase'}[act]||'Transaction')+'</h4>'+
+      '<div class="eg">'+
+      '<div class="ei"><label>Date</label><b>'+(e.date||'Today')+'</b></div>'+
+      '<div class="ei"><label>Category</label><b>'+(e.category||'Other')+'</b></div>'+
+      '<div class="ei"><label>Amount</label><b>'+(e.amount||0)+' '+(e.currency||'EGP')+extra+'</b></div>'+
+      '<div class="ei"><label>Payment</label><b>'+(e.payment_method||'—')+'</b></div>'+
+      '<div class="ei" style="grid-column:span 2"><label>Description</label><b>'+(e.description||'—')+'</b></div>'+
+      (e.tab?'<div class="ei" style="grid-column:span 2"><label>Target tab</label><b>'+e.tab+'</b></div>':'')+
+      (e.notes?'<div class="ei" style="grid-column:span 2"><label>Notes</label><b style="font-weight:400;font-size:11px">'+esc(e.notes)+'</b></div>':'')+
+      '</div>';
+  }
+
+  d.innerHTML =
+    '<div class="ecard">'+body+
+    '<div class="ea">'+
+    '<button class="yes" onclick="writeSheet(this)">✅ Apply to Sheet</button>'+
+    '<button class="loc" onclick="saveLoc(this)">💾 Local</button>'+
+    '<button class="no" onclick="this.closest(\'.msg\').remove()">✕</button>'+
+    '</div><div class="sst"></div></div>';
+  d.__e = e;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+async function writeSheet(btn) {
+  var d=btn.closest('.msg'), e=d.__e;
+  var st=d.querySelector('.sst');
+  st.style.display='block'; st.className='sst ld'; st.textContent='⏳ Writing...';
+  btn.disabled=true; btn.textContent='⏳';
+
+  if (!SURL) {
+    st.className='sst er'; st.textContent='❌ No sheet URL. Go to ⚙️ Connect.';
+    btn.disabled=false; btn.textContent='✅ Add to Sheet'; return;
+  }
+
+  var action = e.action || 'addTransaction';
+  try {
+    var result = await callSheet(Object.assign({}, e, {action:action}));
+    if (result.ok) {
+      st.className='sst ok';
+      st.textContent='✅ Row '+result.row+' in "'+result.tab+'"';
+      saveE(Object.assign({},e,{synced:true,sheetRow:result.row,sheetTab:result.tab}));
+      d.querySelector('.ea').style.display='none';
+      toast('✅ Added to sheet!');
+    } else {
+      st.className='sst er'; st.textContent='❌ '+(result.error||'Error');
+      saveE(Object.assign({},e,{synced:false}));
+      btn.disabled=false; btn.textContent='✅ Add to Sheet';
+    }
+  } catch(err) {
+    st.className='sst er'; st.textContent='❌ '+err.message;
+    saveE(Object.assign({},e,{synced:false}));
+    btn.disabled=false; btn.textContent='✅ Add to Sheet';
+  }
+}
+
+function saveLoc(btn) {
+  var d=btn.closest('.msg');
+  saveE(Object.assign({},d.__e,{synced:false}));
+  d.querySelector('.ea').innerHTML='<div style="color:#E67E22;font-weight:600;text-align:center;width:100%;padding:4px">💾 Saved locally only</div>';
+  toast('💾 Saved locally');
+}
+function saveE(e) { LOG.unshift(Object.assign({},e,{savedAt:new Date().toISOString()})); localStorage.setItem('fl',JSON.stringify(LOG)); }
+
+// ── Quick Add ──────────────────────────────────────────────────────────
+function setTgt(t) {
+  TGT=t;
+  ['tr','da','bk'].forEach(function(id){ document.getElementById('tb-'+id).classList.remove('on'); });
+  document.getElementById('tb-'+{transaction:'tr',daily:'da',bulk:'bk'}[t]).classList.add('on');
+}
+
+async function submitQ() {
+  var desc=document.getElementById('qdesc').value.trim();
+  var amt=parseFloat(document.getElementById('qamt').value);
+  if (!desc||isNaN(amt)||amt<=0) { toast('Fill description & amount'); return; }
+
+  var ccy=document.getElementById('qccy').value;
+  var egp=amt*(FX[ccy]||1);
+  var e={
+    date:document.getElementById('qdate').value,
+    description:desc,
+    category:document.getElementById('qcat').value,
+    currency:ccy, amount:amt, egp_amount:egp,
+    payment_method:document.getElementById('qpay').value,
+    notes:document.getElementById('qnotes').value
+  };
+  var amap={transaction:'addTransaction',daily:'addDaily',bulk:'addBulk'};
+  var btn=document.getElementById('qsub');
+  var res=document.getElementById('qres');
+  btn.textContent='⏳ Adding...'; btn.disabled=true; res.style.display='none';
+
+  if (SURL) {
+    try {
+      var result = await callSheet(Object.assign({},e,{action:amap[TGT]}));
+      res.style.display='block';
+      if (result.ok) {
+        res.className='qres ok';
+        res.textContent='✅ Row '+result.row+' in "'+result.tab+'"';
+        saveE(Object.assign({},e,{synced:true,sheetRow:result.row,sheetTab:result.tab}));
+        ['qdesc','qamt','qnotes'].forEach(function(id){document.getElementById(id).value='';});
+        toast('✅ Added to sheet!');
+      } else {
+        res.className='qres er';
+        res.textContent='❌ '+(result.error||'Error');
+        saveE(Object.assign({},e,{synced:false}));
+      }
+    } catch(err) {
+      res.style.display='block'; res.className='qres er';
+      res.textContent='❌ '+err.message;
+      saveE(Object.assign({},e,{synced:false}));
+    }
+  } else {
+    saveE(Object.assign({},e,{synced:false}));
+    res.style.display='block'; res.className='qres ld';
+    res.textContent='💾 Saved locally — connect sheet to sync';
+  }
+  btn.textContent='✅ Add to Google Sheet'; btn.disabled=false;
+}
+
+// ── Log ────────────────────────────────────────────────────────────────
+function renderLog() {
+  var c=document.getElementById('litems');
+  document.getElementById('lcnt').textContent=LOG.length+' entries';
+  if (!LOG.length) { c.innerHTML='<div class="empty">📋<br>No entries yet</div>'; return; }
+  c.innerHTML=LOG.map(function(e,i){
+    var amt=(e.egp_amount||e.amount||0).toLocaleString('en',{maximumFractionDigits:0});
+    return '<div class="li">'+
+      '<div class="liamt">'+amt+' EGP</div>'+
+      '<div class="lidesc">'+(e.description||'—')+'</div>'+
+      '<span class="licat">'+(e.category||'Other')+'</span>'+
+      '<div class="limeta">📅 '+(e.date||'—')+' · 💳 '+(e.payment_method||'—')+(e.sheetTab?' · '+e.sheetTab:'')+'</div>'+
+      '<div class="'+(e.synced?'lisync':'lipend')+'">'+(e.synced?'✅ Sheet row '+e.sheetRow:'⏳ Local only')+'</div>'+
+      '<div style="margin-top:5px;text-align:right">'+
+      (!e.synced&&SURL?'<button onclick="resync('+i+')" style="background:#1A5276;color:#fff;border:none;padding:3px 9px;border-radius:5px;cursor:pointer;font-size:10px;margin-right:4px">🔄 Sync</button>':'')+
+      '<button onclick="del('+i+')" style="background:none;border:1px solid #ddd;color:#bbb;padding:3px 9px;border-radius:5px;cursor:pointer;font-size:10px">🗑</button>'+
+      '</div></div>';
+  }).join('');
+}
+
+async function resync(i) {
+  var e=LOG[i]; if (!SURL){toast('Connect sheet first');return;}
+  var amap={transaction:'addTransaction',daily:'addDaily',bulk:'addBulk'};
+  try {
+    var result = await callSheet(Object.assign({},e,{action:amap[e.sheet||'transaction']||'addTransaction'}));
+    if (result.ok) {
+      LOG[i].synced=true; LOG[i].sheetRow=result.row; LOG[i].sheetTab=result.tab;
+      localStorage.setItem('fl',JSON.stringify(LOG)); renderLog(); toast('✅ Synced to row '+result.row);
+    } else { toast('❌ '+(result.error||'Error')); }
+  } catch(err){ toast('❌ '+err.message); }
+}
+
+function del(i){ LOG.splice(i,1); localStorage.setItem('fl',JSON.stringify(LOG)); renderLog(); toast('Deleted'); }
+
+function exportCSV(){
+  if (!LOG.length){toast('No entries');return;}
+  var h=['Date','Description','Category','Currency','Amount','EGP','Payment','Notes','In Sheet','Row'];
+  var rows=LOG.map(function(e){return[e.date||'',e.description||'',e.category||'',e.currency||'EGP',e.amount||0,e.egp_amount||0,e.payment_method||'',(e.notes||'').replace(/,/g,';'),e.synced?'Yes':'No',e.sheetRow||''];});
+  var csv=[h].concat(rows).map(function(r){return r.join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='finance_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click(); toast('📥 Downloaded');
+}
+
+function dlApp(){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([document.documentElement.outerHTML],{type:'text/html;charset=utf-8'}));
+  a.download='index.html'; a.click(); toast('📥 Downloading...');
+}
+
+function copyGS(){
+  var txt = document.getElementById('gscode').innerText;
+  navigator.clipboard.writeText(txt).then(function(){ toast('📋 Apps Script copied'); },
+    function(){ toast('Copy failed — select manually'); });
+}
+
+function toast(m){
+  var t=document.getElementById('toast');
+  t.textContent=m; t.style.display='block';
+  setTimeout(function(){t.style.display='none';},2800);
+}
+</script>
+</body>
+</html>
